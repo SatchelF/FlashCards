@@ -1,7 +1,4 @@
 package com.example.studycards.components
-
-import androidx.compose.animation.Animatable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,12 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -27,10 +21,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import kotlinx.coroutines.coroutineScope
@@ -41,25 +35,12 @@ fun Flashcard(flashcard: Flashcard) {
     val rotation = remember { Animatable(0f) }
     val isFlipped = remember { mutableStateOf(false) }
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
+    Row(
         modifier = Modifier
-            .fillMaxWidth(0.90f)
-            .padding(top = 200.dp)
-            .height(300.dp)
-            .padding(vertical = 16.dp)
-            .graphicsLayer {
-                rotationY = rotation.value
-            }
             .pointerInput(Unit) {
                 coroutineScope {
                     while (true) {
-                        val pointerId = awaitPointerEventScope {
-                            awaitFirstDown().id
-                        }
-
+                        val pointerId = awaitPointerEventScope { awaitFirstDown().id }
                         rotation.stop()
                         awaitPointerEventScope {
                             horizontalDrag(pointerId) { change ->
@@ -93,27 +74,43 @@ fun Flashcard(flashcard: Flashcard) {
                 }
             }
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxWidth(0.90f)
+                .padding(top = 200.dp)
+                .height(300.dp)
+                .padding(vertical = 16.dp)
+                .graphicsLayer { rotationY = rotation.value }
         ) {
-            Text(
-                text = flashcard.type,
-                modifier = Modifier.align(Alignment.Start),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = MaterialTheme.typography.titleLarge
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = if (isFlipped.value) flashcard.back else flashcard.front,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                textAlign = TextAlign.Start,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = flashcard.type,
+                        modifier = Modifier.align(Alignment.Start),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isFlipped.value) flashcard.back else flashcard.front,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        textAlign = TextAlign.Start,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
         }
     }
 }
