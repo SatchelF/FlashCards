@@ -29,6 +29,7 @@ fun Flashcard(flashcard: Flashcard) {
         ),
         modifier = Modifier
             .fillMaxWidth(0.95f)
+            .padding(top = 200.dp) // Increase this value to push the card further down
             .height(300.dp)
             .padding(vertical = 16.dp) // Adjust vertical padding as needed
     ) {
@@ -42,7 +43,7 @@ fun Flashcard(flashcard: Flashcard) {
                 modifier = Modifier
                     .align(Alignment.Start), // Aligns the text to the start (left)
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(8.dp)) // Space between type and front text
             Text(

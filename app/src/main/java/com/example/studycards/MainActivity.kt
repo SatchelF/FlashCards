@@ -18,7 +18,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             StudyCardsTheme {
-                // This Box is the root container of your app's UI
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
