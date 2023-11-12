@@ -20,7 +20,6 @@ fun FlashcardView() {
             .fillMaxSize(),
         contentAlignment = Alignment.TopCenter
     ) {
-        // Adjust padding to position the card in the top third of the screen
         Flashcard(flashcard = mockFlashcards[1])
     }
 }
