@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    FlashcardView()
+                    FlashcardView(flashcards = mockFlashcards)
                 }
             }
         }

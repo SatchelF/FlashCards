@@ -31,7 +31,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun Flashcard(flashcard: Flashcard) {
+fun Flashcard(
+    flashcard: Flashcard,
+    onCardChangeRequested: (Boolean) -> Unit
+) {
     val rotation = remember { Animatable(0f) }
     val isFlipped = remember { mutableStateOf(false) }
 
@@ -44,31 +47,41 @@ fun Flashcard(flashcard: Flashcard) {
                         rotation.stop()
                         awaitPointerEventScope {
                             horizontalDrag(pointerId) { change ->
-                                val positionChange = change.positionChange()
-                                if (!positionChange.isUnspecified) {
-                                    launch {
-                                        val newRotation = rotation.value + positionChange.x / 10f
-                                        rotation.snapTo(clamp(newRotation))
+                                val dragAmount = change.positionChange().x
+                                val newRotation = rotation.value + dragAmount / 10f
 
-                                        // Check and flip card
-                                        when {
-                                            !isFlipped.value && newRotation <= -90f -> {
-                                                isFlipped.value = true
-                                                rotation.snapTo(90f) // Swap to back text
-                                            }
-                                            isFlipped.value && newRotation >= 90f -> {
-                                                isFlipped.value = false
-                                                rotation.snapTo(-90f) // Swap to front text
-                                            }
+                                launch {
+                                    rotation.snapTo(clamp(newRotation))
+
+                                    // Flip card logic
+                                    when {
+                                        !isFlipped.value && newRotation <= -90f -> {
+                                            isFlipped.value = true
+                                            rotation.snapTo(90f) // Swap to back text
+                                        }
+                                        isFlipped.value && newRotation >= 90f -> {
+                                            isFlipped.value = false
+                                            rotation.snapTo(-90f) // Swap to front text
                                         }
                                     }
+                                }
+
+                                // Swipe to change card logic
+                                if (isFlipped.value && dragAmount < 0) {
+                                    // Swiped left on the back of the card
+                                    onCardChangeRequested(true)
+                                } else if (!isFlipped.value && dragAmount > 0) {
+                                    // Swiped right on the front of the card
+                                    onCardChangeRequested(false)
                                 }
                             }
                         }
 
-                        // Animate back to front if swipe is incomplete
+                        // Reset rotation if not a swipe
                         launch {
-                            rotation.animateTo(0f, animationSpec = spring(.75f, 50f))
+                            if (rotation.value != 0f && rotation.value != -180f && rotation.value != 180f) {
+                                rotation.animateTo(0f, animationSpec = spring(.75f, 50f))
+                            }
                         }
                     }
                 }
@@ -80,7 +93,10 @@ fun Flashcard(flashcard: Flashcard) {
                 .padding(top = 200.dp)
                 .height(300.dp)
                 .padding(vertical = 16.dp)
-                .graphicsLayer { rotationY = rotation.value }
+                .graphicsLayer {
+                    rotationY = rotation.value
+                    cameraDistance = 12f * density
+                }
         ) {
             Card(
                 colors = CardDefaults.cardColors(
