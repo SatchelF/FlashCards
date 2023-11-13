@@ -37,6 +37,7 @@ fun Flashcard(
 ) {
     val rotation = remember { Animatable(0f) }
     val isFlipped = remember { mutableStateOf(false) }
+    var dragInProgress = remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -45,48 +46,52 @@ fun Flashcard(
                     while (true) {
                         val pointerId = awaitPointerEventScope { awaitFirstDown().id }
                         rotation.stop()
+                        dragInProgress.value = false
                         awaitPointerEventScope {
                             horizontalDrag(pointerId) { change ->
                                 val dragAmount = change.positionChange().x
-                                val newRotation = rotation.value + dragAmount / 10f
 
-                                launch {
-                                    rotation.snapTo(clamp(newRotation))
-
-                                    // Flip card logic
-                                    when {
-                                        !isFlipped.value && newRotation <= -90f -> {
-                                            isFlipped.value = true
-                                            rotation.snapTo(90f) // Swap to back text
+                                // Check if the drag should be considered a swipe
+                                if ((isFlipped.value && dragAmount < 0) || (!isFlipped.value && dragAmount > 0)) {
+                                    if (!dragInProgress.value) {
+                                        onCardChangeRequested(isFlipped.value)
+                                        dragInProgress.value = true
+                                    }
+                                } else {
+                                    // Handle card flip
+                                    if (!dragInProgress.value) {
+                                        val newRotation = rotation.value + dragAmount / 10f
+                                        launch {
+                                            rotation.snapTo(clamp(newRotation))
                                         }
-                                        isFlipped.value && newRotation >= 90f -> {
-                                            isFlipped.value = false
-                                            rotation.snapTo(-90f) // Swap to front text
+                                        when {
+                                            !isFlipped.value && rotation.value <= -90f -> {
+                                                isFlipped.value = true
+                                                launch {
+                                                    rotation.snapTo(90f) // Swap to front text
+                                                }
+
+                                            }
+                                            isFlipped.value && rotation.value >= 90f -> {
+                                                isFlipped.value = false
+                                                launch{
+                                                    rotation.snapTo(-90f) // Swap to front text
+                                                }
+
+                                            }
                                         }
                                     }
                                 }
-
-                                // Swipe to change card logic
-                                if (isFlipped.value && dragAmount < 0) {
-                                    // Swiped left on the back of the card
-                                    onCardChangeRequested(true)
-                                } else if (!isFlipped.value && dragAmount > 0) {
-                                    // Swiped right on the front of the card
-                                    onCardChangeRequested(false)
-                                }
                             }
                         }
 
-                        // Reset rotation if not a swipe
+                        // Reset rotation if the drag is not for changing card
                         launch {
-                            if (rotation.value != 0f && rotation.value != -180f && rotation.value != 180f) {
-                                rotation.animateTo(0f, animationSpec = spring(.75f, 50f))
-                            }
+                            rotation.animateTo(0f, animationSpec = spring(.75f, 50f))
                         }
                     }
                 }
-            }
-    ) {
+            }    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.90f)
